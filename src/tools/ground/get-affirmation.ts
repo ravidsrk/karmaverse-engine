@@ -1,0 +1,67 @@
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
+import { affirmations } from "../../data/wisdom";
+
+export const getAffirmation = createTool({
+  id: "get_affirmation",
+  description:
+    "Get a personalized affirmation rooted in wisdom traditions. Choose by category (calm, resilience, purpose, confidence, gratitude, focus, self-worth) or by mood.",
+  inputSchema: z.object({
+    category: z
+      .enum(["calm", "resilience", "purpose", "confidence", "gratitude", "focus", "self-worth"])
+      .optional()
+      .describe("Affirmation category"),
+    mood: z.string().optional().describe("Current emotional state"),
+    tradition: z.enum(["gita", "stoic", "buddhist", "yoga_sutras", "any"]).default("any").describe("Preferred tradition"),
+    context: z.string().optional().describe("Situation for personalization"),
+  }),
+  outputSchema: z.object({
+    affirmation: z.object({
+      text: z.string(),
+      category: z.string(),
+      tradition: z.string(),
+    }),
+    suggestion: z.string(),
+  }),
+  execute: async (params) => {
+    const { category, mood, tradition } = params;
+
+    let candidates = [...affirmations];
+
+    if (category) {
+      candidates = candidates.filter((a) => a.category === category);
+    }
+
+    if (tradition && tradition !== "any") {
+      const filtered = candidates.filter((a) => a.tradition === tradition);
+      if (filtered.length > 0) candidates = filtered;
+    }
+
+    if (mood) {
+      const moodMatched = candidates.filter((a) => a.moodTags.includes(mood));
+      if (moodMatched.length > 0) candidates = moodMatched;
+    }
+
+    // Pick one
+    const picked = candidates[Math.floor(Math.random() * candidates.length)] || affirmations[0];
+
+    const suggestions: Record<string, string> = {
+      calm: "Repeat this silently 3 times. With each repetition, let your shoulders drop a little further.",
+      resilience: "Write this down and keep it visible today. Read it when difficulty arrives.",
+      purpose: "Set this as your intention for the day. Revisit it before any big decision.",
+      confidence: "Stand tall, breathe deeply, and say this to yourself. Your posture shapes your mindset.",
+      gratitude: "Before reacting to anything today, recall this affirmation first.",
+      focus: "Place this at the top of your workspace. Return to it when distraction calls.",
+      "self-worth": "Say this to yourself the way you'd say it to someone you deeply care about.",
+    };
+
+    return {
+      affirmation: {
+        text: picked.text,
+        category: picked.category,
+        tradition: picked.tradition,
+      },
+      suggestion: suggestions[picked.category] || "Carry this with you today.",
+    };
+  },
+});

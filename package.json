@@ -1,0 +1,67 @@
+{
+  "name": "@karmaverse/engine",
+  "version": "1.0.0",
+  "description": "The Karma Engine — action, consequence, and growth intelligence for AI agents. Ground → Decide → Reflect.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "karmaverse-mcp": "dist/mcp/stdio.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./mcp": {
+      "import": "./dist/mcp/server.js",
+      "types": "./dist/mcp/server.d.ts"
+    },
+    "./tools": {
+      "import": "./dist/tools/index.js",
+      "types": "./dist/tools/index.d.ts"
+    },
+    "./agents": {
+      "import": "./dist/agents/index.js",
+      "types": "./dist/agents/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "mcp": "tsx src/mcp/stdio.ts",
+    "mcp:build": "node dist/mcp/stdio.js",
+    "test": "tsx src/test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "karma",
+    "mindfulness",
+    "ai-agent",
+    "mcp",
+    "decision-intelligence",
+    "wisdom",
+    "breathwork",
+    "meditation",
+    "cognitive-bias",
+    "reflection",
+    "mastra"
+  ],
+  "author": "KarmaVerse",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@mastra/core": "^1.0.0",
+    "@mastra/libsql": "^0.3.0",
+    "@mastra/mcp": "^0.4.0",
+    "@mastra/memory": "^0.3.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0"
+  }
+}
