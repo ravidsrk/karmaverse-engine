@@ -16,7 +16,7 @@ describe("REST API", () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.name).toContain("KarmaVerse");
-      expect(data.tools).toBe(15);
+      expect(data.tools).toBe(16);
       expect(data.layers).toContain("ground");
       expect(data.layers).toContain("decide");
       expect(data.layers).toContain("reflect");
