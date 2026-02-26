@@ -1,220 +1,268 @@
-# Gap Analysis: Docs vs. Implementation
+# Gap Analysis: Full Docs Audit vs. Implementation
 
 > Audit date: 2026-02-26
-> Docs repo: karmaverse-v2 (14 docs + 1 API spec)
+> Docs reviewed: ALL 15 docs + specs/api-schema.md + brand/positioning.md
 > Engine repo: karmaverse-engine (15 tools, 4 agents, MCP + REST)
 
 ---
 
-## Summary
+## Executive Summary
 
-| Area | Spec'd | Built | Parity | Severity |
-|------|--------|-------|--------|----------|
-| Ground tools (7) | 7 | 7 | ✅ 100% | — |
-| Decide tools (4) | 4 | 4 | ✅ 100% | — |
-| Reflect tools (4) | 4 | 4 | ✅ 100% | — |
-| Reputation tools (1) | 1 | 0 | ❌ 0% | 🟡 Medium |
-| MCP server | Yes | Yes | ✅ stdio only | 🟡 Medium |
-| REST API endpoints | ~30 | 14 | 🟡 ~47% | 🔴 High |
-| Content: Gita verses | 701 | 7 | 🔴 1% | 🔴 High |
-| Content: Stoic passages | 100 | 6 | 🔴 6% | 🔴 High |
-| Content: Buddhist verses | 50+ | 4 | 🔴 8% | 🔴 High |
-| Content: Yoga Sutras | 30+ | 3 | 🔴 10% | 🔴 High |
-| Content: Affirmations | 140 (20×7) | 14 (2×7) | 🔴 10% | 🟡 Medium |
-| Content: Meditations | 21 (7×3) | 5 | 🟡 24% | 🟡 Medium |
-| Content: Breathwork | 6 | 6 | ✅ 100% | — |
-| Content: Biases | 12 | 12 | ✅ 100% | — |
-| Auth/rate limiting | Spec'd | None | ❌ 0% | 🟡 Medium |
-| x402 payments | Spec'd | None | ❌ 0% | 🟢 Low (Phase 2) |
-| Database/persistence | Postgres/Supabase | In-memory Map | 🔴 0% | 🔴 High |
-| MCP Resources | 5 spec'd | 0 | ❌ 0% | 🟡 Medium |
-| MCP Prompts | 3 spec'd | 0 | ❌ 0% | 🟡 Medium |
-| SSE transport | Spec'd | None | ❌ 0% | 🟢 Low |
-| Telegram bot | Spec'd | None | ❌ 0% | 🟢 Low (Phase 2) |
-| MoltBook agent | Spec'd | None | ❌ 0% | 🟢 Low (Phase 2) |
+The **tool architecture is correct** — all 15 Phase 1-3 tools exist and pass tests. The critical gaps are:
+1. **No AI Interpreter layer** — spec calls for LLM-powered personalization; we return static text
+2. **No database** — decisions vanish on restart
+3. **Content is a demo set** — 34 items vs. 1,000+ spec'd
+4. **Half the REST API missing** — 14/~30 endpoints
+5. **No landing page** — fully spec'd 10-section page, not built
 
 ---
 
-## 🔴 CRITICAL GAPS (must fix for a credible Phase 1)
+## LAYER-BY-LAYER PARITY
 
-### 1. Content Volume — 20 verses vs. 880+ spec'd
+### ✅ Tool Count: MATCHING
 
-**Spec (05-content-strategy.md):**
-- Gita: 701 verses (full text exists in v1)
-- Stoic: 100 curated passages
-- Buddhist: 50+ (Dhammapada core + key teachings)
-- Yoga Sutras: 30+ key sutras
-- Affirmations: 140 (20 per category × 7 categories)
-- Total: ~1,000+ content items
-
-**Built:**
-- Gita: 7 verses
-- Stoic: 6 passages
-- Buddhist: 4 verses
-- Yoga Sutras: 3 sutras
-- Affirmations: 14 (2 per category × 7)
-- Total: 34 items
-
-**Impact:** An agent calling `search_wisdom` with any non-trivial query will get poor results. The current 23 verses are a demo set, not a viable product. The search/matching logic works, but content is the product.
-
-**Fix:** Import the existing 701 Gita verses from v1 database. Curate minimum 30 Stoic, 20 Buddhist, 15 Yoga Sutras. Expand affirmations to 10 per category minimum.
-
-### 2. No Persistence — In-memory decisions evaporate on restart
-
-**Spec (02-technical-architecture.md):**
-- Supabase/PostgreSQL for decisions, outcomes, patterns
-- Full data model spec'd in 00-vision.md (decisions, decision_outcomes, user_patterns, reflections tables)
-
-**Built:**
-- `Map<string, any>` in `log-decision.ts` — all data lost on process restart
-- No database connection at all
-
-**Impact:** The entire Decide → Reflect cycle is broken in production. A user logs a decision, the server restarts, the decision is gone. Pattern detection and reflections become meaningless.
-
-**Fix:** Connect to Neon Postgres (DATABASE_URL is available). Create tables matching the spec'd schema. Replace in-memory Map with database queries.
-
-### 3. Missing REST API Endpoints — 14/~30 built
-
-**Spec'd but not built:**
-
-| Missing Endpoint | Description |
-|-----------------|-------------|
-| `GET /api/v2/wisdom/verse/:tradition/:reference` | Path-param verse lookup |
-| `GET /api/v2/wisdom/traditions` | List traditions with metadata |
-| `GET /api/v2/wisdom/cross-tradition/:concept` | Cross-tradition concept comparison |
-| `GET /api/v2/breathwork/exercises` | List all exercises |
-| `GET /api/v2/breathwork/exercise/:slug` | Get exercise by slug |
-| `GET /api/v2/breathwork/recommend` | Auto-recommend exercise |
-| `GET /api/v2/meditation/styles` | List meditation styles |
-| `GET /api/v2/affirmation/categories` | List affirmation categories |
-| `GET /api/v2/decide/decisions/:user_id` | List user's decisions |
-| `GET /api/v2/decide/decision/:id` | Get specific decision |
-| `GET /api/v2/reflect/history/:user_id` | Full reflection history |
-| `GET /api/v2/karma-score/:user_id` | Karma Score endpoint |
-| `GET /api/v2/usage` | Usage stats |
-| `GET /api/v2/health` | Health check |
-| `POST /api/v2/api-keys` | API key management |
-| `GET /api/v2/gita/chapters` | Legacy Gita endpoints |
-| `GET /api/v2/gita/verse/:chapter/:verse` | Legacy Gita verse |
-
-**Impact:** API consumers following the docs will hit 404s. The core CRUD flow works (create framework, log decision, log outcome, get reflections) but browsing/listing endpoints are missing.
+| Layer | Spec'd Tools | Built | Match |
+|-------|-------------|-------|-------|
+| Ground | 7 | 7 | ✅ |
+| Decide | 4 | 4 | ✅ |
+| Reflect | 4 | 4 | ✅ |
+| Reputation | 1 (`get_karma_score`) | 0 (embedded in `generate_reflection`) | ❌ |
+| **Total** | **16** | **15 + 1 embedded** | 🟡 |
 
 ---
 
-## 🟡 MEDIUM GAPS (should fix for quality)
+## 🔴 CRITICAL GAPS
 
-### 4. MCP Tool Schema Mismatches
+### 1. AI Interpreter Layer — NOT BUILT
 
-**get_verse:**
-- Spec has `persona` param (teacher/friend/monk) for interpretation style → Not implemented
-- Spec has `user_context` param for personalized interpretation → Not implemented
+**Source:** `02-technical-architecture.md` §Layer 1, `03-mcp-server-spec.md`
 
-**get_meditation:**
-- Spec has `style` param with 6 options (guided, body_scan, loving_kindness, visualization, breath_focus, gratitude) → Built with `category` instead (morning, stress_relief, focus, gratitude, body_scan)
-- Spec has `time_of_day` param → Not implemented
-- Spec response has structured script (intro/body/closing) → Built returns flat script string
-
-**get_breathing_exercise:**
-- Spec has `type` param selecting specific technique → Built uses `useCase` + `slug` (actually better UX)
-- Spec has `duration_minutes` param adjusting cycle count → Not implemented
-- Spec response has `preparation` and `tips` fields → Not implemented
-
-**get_affirmation:**
-- Spec has `letting_go` category → Not in built affirmation categories
-- Spec has `user_context` for personalization → Not implemented
-- Spec response has `inspired_by` with connection text → Built returns simpler structure
-
-**mindfulness_check_in:**
-- Spec has `energy_level` with 5 levels (very_low, low, medium, high, very_high) → Built has 3 (low, medium, high)
-- Spec has `time_available_minutes` param → Not implemented
-
-**search_wisdom:**
-- Spec response has `original_text` (Sanskrit), `relevance_score` (numeric), `persona`-adapted interpretation → Not implemented
-- Built has `relevanceReason` (string) instead of numeric score
-
-**detect_biases:**
-- Spec response has `confidence` (numeric per bias) → Built has `severity` (low/medium/high) — different approach but reasonable
-
-**detect_patterns:**
-- Spec requires 5+ decisions → Built requires 3+ (actually more usable, but doesn't match spec)
-- Spec has `focus_area` param (career, relationships, etc.) → Not implemented
-
-**generate_reflection:**
-- Spec has `include_wisdom` param → Not implemented (always includes)
-- Spec response has `mindfulness_activity` tracking → Not implemented
-
-### 5. Missing MCP Resources (5 spec'd)
+The spec describes an **AI Interpreter** shared across all layers:
 
 ```
-karmaverse://traditions          → List traditions
-karmaverse://gita/chapters       → Chapter index
-karmaverse://gita/verses/{ch}/{v} → Verse access
-karmaverse://breathwork/catalog  → Exercise catalog
-karmaverse://meditation/styles   → Style catalog
+Input:  Raw verse (Gita 2.47) + user context ("anxious about deadline")
+Output: Personalized interpretation connecting the verse to their specific situation
 ```
 
-None implemented. Resources let agents browse data without tool calls.
+With 3 personas (Teacher/Friend/Monk) that change interpretation style.
 
-### 6. Missing MCP Prompts (3 spec'd)
+**What's built:** Static pre-written interpretations. No LLM calls. No persona support. The `persona` and `user_context` params from the spec are completely absent.
+
+**Impact:** Every tool returns the same canned interpretation regardless of user context. This is the difference between "a database lookup" and "an AI-powered wisdom engine."
+
+**Fix:** Add an LLM interpretation layer that takes (verse + user context + persona) → personalized interpretation. Use Anthropic Claude via `ANTHROPIC_API_KEY` (available in env).
+
+### 2. No Database Persistence
+
+**Source:** `02-technical-architecture.md` §Data Layer (12 tables spec'd)
+
+**Spec'd tables:**
+```
+gita_verses, user_profiles, user_sessions, user_favorites,
+breathwork_exercises, meditation_templates, affirmations, wisdom_texts,
+api_usage, decisions, decision_outcomes, user_patterns, reflections, karma_scores
+```
+
+**Built:** `Map<string, any>` in memory. All decisions, outcomes, patterns lost on restart.
+
+**Fix:** Use Neon Postgres (`DATABASE_URL` available). Create minimum viable schema: `decisions`, `decision_outcomes`, `karma_scores`.
+
+### 3. Content Volume — 34 items vs. 1,000+ spec'd
+
+**Source:** `05-content-strategy.md`, `01-pivot-plan.md`
+
+| Content Type | Spec'd | Built | Gap |
+|-------------|--------|-------|-----|
+| Gita verses | 701 (full text exists in v1 Supabase) | 7 | 99% missing |
+| Stoic passages | 100 curated | 6 | 94% missing |
+| Buddhist verses | 50+ (Dhammapada + teachings) | 4 | 92% missing |
+| Yoga Sutras | 30+ key sutras | 3 | 90% missing |
+| Affirmations | 140 (20 × 7 categories) | 14 (2 × 7) | 90% missing |
+| Meditation templates | 21 (7 categories × 3 durations) | 5 | 76% missing |
+| Breathwork | 6 | 6 | ✅ |
+| Cognitive biases | 12 | 12 | ✅ |
+
+**Additional content gaps from `05-content-strategy.md`:**
+- Missing `letting_go` affirmation category (spec has 8 categories, built has 7)
+- Missing `loving_kindness` and `evening_wind_down` meditation categories
+- Breathwork exercises missing: `preparation`, `tips`, `science`, `contraindications`, `cycles_by_duration` fields
+- No cross-tradition concept mapping (Gita 2.47 ↔ Stoic Dichotomy of Control ↔ Buddhist non-attachment)
+- No Gita Paths (curated verse sequences: "Dealing with Loss", "Finding Purpose", etc.)
+
+### 4. Missing REST API Endpoints — 14/~30
+
+**Source:** `specs/api-schema.md`, `07-decide-module.md`, `08-reflect-module.md`
+
+**Missing endpoints:**
+
+| Endpoint | Source Doc |
+|----------|-----------|
+| `GET /api/v2/wisdom/verse/:tradition/:reference` | api-schema.md |
+| `GET /api/v2/wisdom/traditions` | api-schema.md |
+| `GET /api/v2/wisdom/cross-tradition/:concept` | api-schema.md |
+| `GET /api/v2/breathwork/exercises` | api-schema.md |
+| `GET /api/v2/breathwork/exercise/:slug` | api-schema.md |
+| `GET /api/v2/breathwork/recommend` | api-schema.md |
+| `POST /api/v2/meditation/generate` (structured response) | api-schema.md |
+| `GET /api/v2/meditation/styles` | api-schema.md |
+| `POST /api/v2/affirmation/generate` | api-schema.md |
+| `GET /api/v2/affirmation/categories` | api-schema.md |
+| `POST /api/v2/check-in` (alternate path) | api-schema.md |
+| `GET /api/v2/decide/decisions/:user_id` | 07-decide-module.md |
+| `GET /api/v2/decide/decision/:id` | 07-decide-module.md |
+| `GET /api/v2/reflect/history/:user_id` | 08-reflect-module.md |
+| `GET /api/v2/karma-score/:user_id` | api-schema.md |
+| `GET /api/v2/health` | api-schema.md |
+| `GET /api/v2/gita/chapters` | api-schema.md (legacy) |
+| `GET /api/v2/gita/chapter/:number` | api-schema.md (legacy) |
+| `GET /api/v2/gita/verse/:chapter/:verse` | api-schema.md (legacy) |
+| `GET /api/v2/gita/paths` | api-schema.md (legacy) |
+
+### 5. Landing Page — NOT BUILT
+
+**Source:** `10-landing-page.md` — Fully spec'd 10-section page:
+1. Hero with CTA
+2. 5-layer Karma Engine visualization
+3. Quick Start (3-line install)
+4. Live Demo (interactive API call)
+5. 16 Tools catalog
+6. Use Cases (4 agent personas)
+7. Pricing (Free/Standard/Premium)
+8. $KARMA Token info
+9. Ecosystem (5 distribution channels)
+10. Footer
+
+**Technical spec:** Next.js or Astro, Tailwind, dark theme, Lighthouse 95+
+
+---
+
+## 🟡 MEDIUM GAPS
+
+### 6. MCP Tool Schema Mismatches
+
+| Tool | Missing Params (from spec) | Impact |
+|------|--------------------------|--------|
+| `get_verse` | `persona` (teacher/friend/monk), `user_context` | No personalized interpretations |
+| `get_meditation` | `style` (6 options vs 5 categories), `time_of_day`, structured `script` response (intro/body/closing vs flat string) | Meditation response format wrong |
+| `get_breathing_exercise` | `duration_minutes` (adjusts cycles), `preparation`, `tips` in response | Missing helpful guidance |
+| `get_affirmation` | `user_context` for personalization, `inspired_by` with connection text in response | Simpler than spec'd |
+| `mindfulness_check_in` | `energy_level` has 5 levels in spec (very_low/low/medium/high/very_high) vs 3 built, `time_available_minutes` | Less granular |
+| `search_wisdom` | `persona`, `original_text` (Sanskrit), numeric `relevance_score` (0-1) vs string reason | Missing fields |
+| `detect_patterns` | `focus_area` param (career/relationships/health/financial/personal_growth/all) | Can't filter by life area |
+| `generate_reflection` | `include_wisdom` param, `mindfulness_activity` tracking in response | Missing tracking data |
+| `get_pending_reflections` | `total_completed`, `completion_rate` in response | Missing completion metrics |
+
+### 7. `get_karma_score` — Standalone Tool Missing
+
+**Source:** `09-reputation-ethics.md`, `03-mcp-server-spec.md` (tool index), `10-landing-page.md` (lists 16 tools)
+
+Spec'd as standalone MCP tool with:
+- Full score with 5-component breakdown
+- Level labels with exact thresholds: 0-20 Beginning, 21-40 Awakening, 41-60 Growing, 61-80 Flourishing, 81-100 Mastery
+- `include_breakdown` param
+- `next_milestone` and `suggestion` in response
+
+**Built:** Score calculation exists INSIDE `generate_reflection` but uses different level thresholds (0/25/45/65/85 vs spec's 0/21/41/61/81). Not exposed as standalone tool.
+
+### 8. MCP Resources (5 spec'd, 0 built)
+
+**Source:** `03-mcp-server-spec.md` §Resources
 
 ```
-morning_routine      → Complete morning mindfulness routine
-stress_intervention  → Immediate stress relief combo
-evening_reflection   → End-of-day reflection
+karmaverse://traditions         — List available traditions
+karmaverse://gita/chapters      — Chapter index
+karmaverse://gita/verses/{ch}/{v} — Specific verse
+karmaverse://breathwork/catalog — Exercise catalog
+karmaverse://meditation/styles  — Style catalog
 ```
 
-None implemented. Prompts are pre-built templates that make agent integration easier.
+### 9. MCP Prompts (3 spec'd, 0 built)
 
-### 7. get_karma_score Tool Missing
+**Source:** `03-mcp-server-spec.md` §Prompts
 
-**Spec (09-reputation-ethics.md + 03-mcp-server-spec.md):**
-- Listed in the Complete Tool Index as Phase 4
-- REST endpoint: `GET /api/v2/karma-score/:user_id`
+```
+morning_routine       — verse + intention + breathing + affirmation
+stress_intervention   — breathing + grounding verse + short meditation
+evening_reflection    — gratitude + calming verse + wind-down breathing
+```
 
-**Built:** Karma Score is calculated INSIDE `generate_reflection` but not exposed as a standalone tool.
+### 10. No Auth / Rate Limiting / Error Codes
 
-**Impact:** Agents can't check a user's Karma Score without generating a full reflection report.
+**Source:** `03-mcp-server-spec.md` §Rate Limits, `specs/api-schema.md` §Authentication
 
-### 8. No Auth/Rate Limiting
+- 3 tiers: Free (10/day), Standard (1,000/day), Premium (10,000/day)
+- API key registration
+- Structured error format with codes: `RATE_LIMIT_EXCEEDED`, `UNAUTHORIZED`, `VERSE_NOT_FOUND`, etc.
+- `quota` object in responses showing usage
 
-Spec describes 3 tiers (Free/Standard/Premium) with call limits. No auth middleware exists.
+### 11. Karma Score Level Thresholds DON'T MATCH
+
+**Spec (09-reputation-ethics.md):** 0-20, 21-40, 41-60, 61-80, 81-100
+**Built:** 0, 25, 45, 65, 85
+
+### 12. Design System — NOT IMPLEMENTED
+
+**Source:** `11-ui-ux-design-system.md` — Full design system spec:
+- Color tokens (layer-mapped: Ground=Emerald, Decide=Amber, Reflect=Indigo, Reputation=Purple, Ethics=Rose)
+- Typography (Inter + JetBrains Mono)
+- Spacing scale (4px base)
+- Component specs (cards, badges, code blocks, tool cards)
+- Dark theme by default
 
 ---
 
 ## 🟢 LOW PRIORITY GAPS (Phase 2+)
 
-### 9. SSE Transport — Only stdio built
-### 10. x402 USDC Payments — Spec'd but Phase 2
-### 11. $KARMA Token Integration — Phase 2+
-### 12. Telegram Bot — Phase 2
-### 13. MoltBook Agent — Phase 2
-### 14. ACP Integration — Phase 3
-### 15. Layers 4-5 (Reputation, Ethics) — Phase 4-5
-### 16. Embeddings/Semantic Search — Spec'd, not built (using keyword matching instead)
+| # | Gap | Phase | Source Doc |
+|---|-----|-------|------------|
+| 13 | SSE MCP transport | Phase 2 | 02-technical-architecture.md |
+| 14 | x402 USDC payments | Phase 1-2 | 06-token-economics.md |
+| 15 | $KARMA token verification | Phase 2+ | 06-token-economics.md |
+| 16 | Telegram bot | Phase 2 | 01-pivot-plan.md, 12-user-flows.md |
+| 17 | MoltBook agent | Phase 2 | 01-pivot-plan.md |
+| 18 | ACP integration | Phase 3 | 04-acp-integration.md |
+| 19 | npm publishing + registry submissions | Phase 1 | 01-pivot-plan.md |
+| 20 | Embeddings + semantic search (pgvector) | Phase 2 | 02-technical-architecture.md |
+| 21 | User profiles + streaks + favorites | Phase 2 | 02-technical-architecture.md |
+| 22 | API usage tracking | Phase 2 | 02-technical-architecture.md |
+| 23 | Gita Paths (curated sequences) | Phase 2 | 05-content-strategy.md |
+| 24 | Cross-tradition concept mapping | Phase 2 | 05-content-strategy.md |
+| 25 | Agent Karma Score (for ACP) | Phase 4 | 09-reputation-ethics.md |
+| 26 | Ethics Layer (Layer 5) | Phase 5 | 09-reputation-ethics.md |
+| 27 | Journaling prompts module | Phase 4 | 01-pivot-plan.md |
+| 28 | Sleep & grounding module | Phase 4 | 01-pivot-plan.md |
 
 ---
 
-## What's BETTER Than Spec
+## ✅ WHAT'S CORRECT / BETTER THAN SPEC
 
-Some things were built smarter than spec'd:
-
-1. **Mastra framework** — Not in original spec. Agents, tool composition, and MCP for free.
-2. **Unified Karma Engine agent** — All 15 tools in one agent. Spec described tools individually but not a unified orchestration agent.
-3. **detect_patterns at 3 decisions** — More usable than the spec'd 5. Users get value sooner.
-4. **Breathwork slug-based access** — Spec uses `type` param. Slug is more REST-friendly.
-5. **93.7% test coverage** — Not spec'd at all. 129 tests across all layers.
-6. **Hono API server** — Lightweight and fast. Spec assumed Express.
+1. **Mastra framework** — Not in spec. Gives us agents, tool composition, MCP server for free.
+2. **4 Mastra agents** — Spec describes tools individually. We have orchestration agents.
+3. **129 tests, 93.7% coverage** — Not spec'd. Solid engineering foundation.
+4. **Hono API server** — Lightweight, fast. Spec assumed Supabase Edge Functions.
+5. **Breathwork slug-based access** — More REST-friendly than spec's `type` param.
+6. **detect_patterns at 3 decisions** — More usable than spec's 5 threshold.
+7. **tsup build pipeline** — Clean ESM output with type declarations.
+8. **GitHub repo** — Code is version-controlled and pushed.
 
 ---
 
-## Recommended Priority Order
+## PRIORITY FIX ORDER
 
-1. **🔴 Database persistence** — Connect Neon Postgres, create schema, migrate from in-memory
-2. **🔴 Content expansion** — Import Gita v1 data, curate minimum viable Stoic/Buddhist/Yoga corpus
-3. **🔴 Missing REST endpoints** — Add the 15+ missing endpoints
-4. **🟡 MCP schema alignment** — Add persona, user_context, time_of_day params
-5. **🟡 get_karma_score tool** — Extract from generate_reflection into standalone
-6. **🟡 MCP Resources + Prompts** — Add browseable data and pre-built templates
-7. **🟡 Auth + rate limiting** — API key registration, tier enforcement
-8. **🟢 SSE transport** — For remote MCP connections
-9. **🟢 Embeddings** — Replace keyword matching with semantic search
+### Must-fix for credible Phase 1:
+
+1. **🔴 AI Interpreter** — Add LLM personalization layer with persona support
+2. **🔴 Database** — Connect Neon Postgres, create schema, migrate from in-memory
+3. **🔴 Content expansion** — Import v1 Gita data, curate 200+ items minimum
+4. **🔴 Missing REST endpoints** — Add the 20 missing routes
+5. **🔴 `get_karma_score` standalone tool** — Extract + fix level thresholds
+6. **🔴 Landing page** — Build the spec'd 10-section page
+
+### Should-fix for quality:
+
+7. **🟡 MCP tool schema alignment** — Add all missing params
+8. **🟡 Structured meditation response** — intro/body/closing format
+9. **🟡 MCP Resources + Prompts** — 5 resources + 3 prompts
+10. **🟡 Auth + rate limiting** — API key + tier enforcement
+11. **🟡 Error code standardization** — Match spec'd error format
+12. **🟡 Design system implementation** — For landing page
