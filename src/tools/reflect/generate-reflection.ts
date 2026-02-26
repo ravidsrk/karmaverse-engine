@@ -35,7 +35,7 @@ export const generateReflection = createTool({
     }),
   }),
   execute: async (params) => {
-    const { userId, period } = params;
+    const { userId, period, includeWisdom } = params;
     const store = getDecisionStore();
 
     // Calculate period range
@@ -135,12 +135,12 @@ export const generateReflection = createTool({
       },
       highlights,
       growthAreas,
-      wisdomForNextPeriod: {
+      wisdomForNextPeriod: includeWisdom !== false ? {
         tradition: randomVerse.tradition,
         reference: randomVerse.reference,
         text: randomVerse.text,
         whyThisOne: `Carry this wisdom into the next ${period === "weekly" ? "week" : period === "monthly" ? "month" : "quarter"}.`,
-      },
+      } : null as any,
       karmaScoreEstimate: {
         score: karmaScore,
         level: level.label,

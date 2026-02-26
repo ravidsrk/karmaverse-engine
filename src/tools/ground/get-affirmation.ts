@@ -1,11 +1,12 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { affirmations } from "../../data/index";
+import { personalizeAffirmation, isAiAvailable, type Persona } from "../../ai";
 
 export const getAffirmation = createTool({
   id: "get_affirmation",
   description:
-    "Get a personalized affirmation rooted in wisdom traditions. Choose by category (calm, resilience, purpose, confidence, gratitude, focus, self-worth) or by mood.",
+    "Get a personalized affirmation rooted in wisdom traditions. 8 categories. Supports AI personalization with user context and persona.",
   inputSchema: z.object({
     category: z
       .enum(["calm", "resilience", "purpose", "confidence", "gratitude", "focus", "self-worth", "letting_go"])
@@ -19,13 +20,15 @@ export const getAffirmation = createTool({
   outputSchema: z.object({
     affirmation: z.object({
       text: z.string(),
+      personalizedText: z.string().optional(),
       category: z.string(),
       tradition: z.string(),
     }),
     suggestion: z.string(),
+    aiPersonalized: z.boolean().optional(),
   }),
   execute: async (params) => {
-    const { category, mood, tradition } = params;
+    const { category, mood, tradition, userContext, persona } = params;
 
     let candidates = [...affirmations];
 
@@ -46,6 +49,21 @@ export const getAffirmation = createTool({
     // Pick one
     const picked = candidates[Math.floor(Math.random() * candidates.length)] || affirmations[0];
 
+    // AI personalization if context provided
+    let personalizedText: string | undefined;
+    let aiPersonalized = false;
+
+    if (userContext && isAiAvailable()) {
+      personalizedText = await personalizeAffirmation({
+        baseText: picked.text,
+        category: picked.category,
+        userContext,
+        tradition: picked.tradition,
+        persona: persona as Persona,
+      });
+      aiPersonalized = personalizedText !== picked.text;
+    }
+
     const suggestions: Record<string, string> = {
       calm: "Repeat this silently 3 times. With each repetition, let your shoulders drop a little further.",
       resilience: "Write this down and keep it visible today. Read it when difficulty arrives.",
@@ -60,10 +78,12 @@ export const getAffirmation = createTool({
     return {
       affirmation: {
         text: picked.text,
+        ...(personalizedText && aiPersonalized ? { personalizedText } : {}),
         category: picked.category,
         tradition: picked.tradition,
       },
       suggestion: suggestions[picked.category] || "Carry this with you today.",
+      ...(aiPersonalized ? { aiPersonalized } : {}),
     };
   },
 });

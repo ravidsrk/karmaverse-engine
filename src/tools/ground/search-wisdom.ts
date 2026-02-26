@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { wisdomVerses } from "../../data/index";
+import { personalizeVerse, isAiAvailable, type Persona } from "../../ai";
 
 export const searchWisdom = createTool({
   id: "search_wisdom",
@@ -34,7 +35,7 @@ export const searchWisdom = createTool({
     totalAvailable: z.number(),
   }),
   execute: async (params) => {
-    const { query, mood, tradition, limit } = params;
+    const { query, mood, tradition, limit, persona } = params;
     const queryLower = query.toLowerCase();
 
     // Score each verse based on relevance
@@ -85,16 +86,34 @@ export const searchWisdom = createTool({
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
+    // If persona is set and AI available, personalize the top result's interpretation
+    const results = scored.map((s) => ({
+      tradition: s.verse.tradition,
+      source: s.verse.source,
+      reference: s.verse.reference,
+      text: s.verse.text,
+      interpretation: s.verse.interpretation,
+      themes: s.verse.themes,
+      relevanceReason: s.reason,
+    }));
+
+    if (persona && isAiAvailable() && results.length > 0) {
+      const top = scored[0];
+      const personalized = await personalizeVerse({
+        tradition: top.verse.tradition,
+        reference: top.verse.reference,
+        text: top.verse.text,
+        baseInterpretation: top.verse.interpretation,
+        userContext: query,
+        persona: persona as Persona,
+      });
+      if (personalized !== top.verse.interpretation) {
+        results[0].interpretation = personalized;
+      }
+    }
+
     return {
-      verses: scored.map((s) => ({
-        tradition: s.verse.tradition,
-        source: s.verse.source,
-        reference: s.verse.reference,
-        text: s.verse.text,
-        interpretation: s.verse.interpretation,
-        themes: s.verse.themes,
-        relevanceReason: s.reason,
-      })),
+      verses: results,
       totalAvailable: wisdomVerses.filter((v) => tradition === "all" || v.tradition === tradition).length,
     };
   },

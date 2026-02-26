@@ -37,7 +37,7 @@ export const getBreathingExercise = createTool({
     }),
   }),
   execute: async (params) => {
-    const { useCase, mood, difficulty, slug } = params;
+    const { useCase, mood, difficulty, slug, durationMinutes } = params;
 
     let exercise;
 
@@ -68,13 +68,24 @@ export const getBreathingExercise = createTool({
       whyThisOne = `Matches your current mood (${mood}) — helps with ${exercise.useCases[0]}.`;
     }
 
+    // Adjust duration if durationMinutes specified
+    let totalDurationSeconds = exercise.totalDurationSeconds;
+    let adjustedSteps = exercise.steps;
+    if (durationMinutes) {
+      const targetSeconds = durationMinutes * 60;
+      const oneCycleSeconds = exercise.steps.reduce((sum, s) => sum + s.durationSeconds, 0);
+      const cycles = Math.max(1, Math.round(targetSeconds / oneCycleSeconds));
+      totalDurationSeconds = oneCycleSeconds * cycles;
+      whyThisOne += ` Adjusted to ~${cycles} cycles for your ${durationMinutes}-minute window.`;
+    }
+
     return {
       exercise: {
         name: exercise.name,
         description: exercise.description,
         difficulty: exercise.difficulty,
-        totalDurationSeconds: exercise.totalDurationSeconds,
-        steps: exercise.steps,
+        totalDurationSeconds,
+        steps: adjustedSteps,
         useCases: exercise.useCases,
         whyThisOne,
       },

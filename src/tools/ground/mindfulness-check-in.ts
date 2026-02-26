@@ -42,7 +42,8 @@ export const mindfulnessCheckIn = createTool({
     followUp: z.string(),
   }),
   execute: async (params) => {
-    const { mood, energy, context: userContext } = params;
+    const { mood, energy, context: userContext, timeAvailableMinutes } = params;
+    const availableTime = timeAvailableMinutes || 5;
 
     // Generate assessment
     const assessments: Record<string, string> = {
@@ -121,7 +122,11 @@ export const mindfulnessCheckIn = createTool({
         affirmation: affirmation.text,
         category: affirmation.category,
       },
-      followUp: followUps[mood] || "Consider a 5-minute meditation to deepen this grounding.",
+      followUp: availableTime <= 2
+        ? "That's all we need for now. Just the breathing is enough. Return to what you were doing."
+        : availableTime <= 5
+          ? (followUps[mood] || "Consider a brief meditation to deepen this grounding.")
+          : `You have ${availableTime} minutes. ${followUps[mood] || "Try a full meditation session to deepen this grounding."} You have time for a ${Math.min(availableTime - 2, 10)}-minute meditation after the breathing exercise.`,
     };
   },
 });

@@ -26,11 +26,31 @@ export const detectPatterns = createTool({
     message: z.string(),
   }),
   execute: async (params) => {
-    const { userId } = params;
+    const { userId, focusArea } = params;
     const store = getDecisionStore();
 
-    // Gather user's decisions
-    const allDecisions = Array.from(store.values()).filter((d) => d.userId === userId);
+    // Gather user's decisions, optionally filtered by focus area
+    let allDecisions = Array.from(store.values()).filter((d) => d.userId === userId);
+
+    // If focusArea is specified and not "all", filter by title/context keyword matching
+    if (focusArea && focusArea !== "all") {
+      const areaKeywords: Record<string, string[]> = {
+        career: ["job", "work", "career", "promotion", "salary", "boss", "colleague", "office", "interview", "quit"],
+        relationships: ["relationship", "partner", "friend", "family", "love", "dating", "marriage", "breakup", "conflict"],
+        health: ["health", "exercise", "diet", "sleep", "weight", "doctor", "meditation", "stress", "anxiety", "mental"],
+        financial: ["money", "invest", "budget", "save", "spend", "debt", "financial", "purchase", "buy", "cost"],
+        personal_growth: ["learn", "goal", "habit", "read", "skill", "growth", "improve", "develop", "course", "practice"],
+      };
+      const keywords = areaKeywords[focusArea] || [];
+      if (keywords.length > 0) {
+        const filtered = allDecisions.filter((d) => {
+          const text = `${d.title} ${(d as any).context || ""}`.toLowerCase();
+          return keywords.some((kw) => text.includes(kw));
+        });
+        if (filtered.length > 0) allDecisions = filtered;
+      }
+    }
+
     const withOutcomes = allDecisions.filter((d) => d.outcome !== null);
 
     if (withOutcomes.length < 3) {
