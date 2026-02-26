@@ -37,5 +37,8 @@ export const mcpServer = new MCPServer({
     detect_patterns: tools.detectPatterns,
     generate_reflection: tools.generateReflection,
     get_pending_reflections: tools.getPendingReflections,
+
+    // Reputation Layer (Layer 4) — 1 tool
+    get_karma_score: tools.getKarmaScore,
   },
 });

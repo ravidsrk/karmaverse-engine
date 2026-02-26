@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { wisdomVerses, breathworkExercises, affirmations } from "../../data/wisdom";
+import { wisdomVerses, breathworkExercises, affirmations } from "../../data/index";
 
 export const mindfulnessCheckIn = createTool({
   id: "mindfulness_check_in",
@@ -10,8 +10,9 @@ export const mindfulnessCheckIn = createTool({
     mood: z
       .enum(["anxious", "sad", "angry", "confused", "restless", "grateful", "hopeful", "peaceful", "overwhelmed", "lonely", "frustrated"])
       .describe("Current emotional state"),
-    energy: z.enum(["low", "medium", "high"]).describe("Current energy level"),
+    energy: z.enum(["very_low", "low", "medium", "high", "very_high"]).describe("Current energy level"),
     context: z.string().optional().describe("Brief description of the situation (e.g., 'deadline pressure', 'relationship conflict')"),
+    timeAvailableMinutes: z.number().min(1).max(30).default(5).optional().describe("How many minutes the user has for grounding"),
   }),
   outputSchema: z.object({
     assessment: z.string(),
@@ -61,9 +62,9 @@ export const mindfulnessCheckIn = createTool({
     // Pick breathing exercise
     const negativeMoods = ["anxious", "sad", "angry", "overwhelmed", "frustrated", "lonely", "restless", "confused"];
     let exercise;
-    if (energy === "low") {
+    if (energy === "very_low" || energy === "low") {
       exercise = breathworkExercises.find((e) => e.slug === "belly-breathing")!;
-    } else if (negativeMoods.includes(mood) && energy === "high") {
+    } else if (negativeMoods.includes(mood) && (energy === "high" || energy === "very_high")) {
       exercise = breathworkExercises.find((e) => e.slug === "box-breathing")!;
     } else if (mood === "restless") {
       exercise = breathworkExercises.find((e) => e.slug === "coherent-breathing")!;

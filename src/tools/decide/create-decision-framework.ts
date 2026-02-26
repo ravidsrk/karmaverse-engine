@@ -1,7 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { wisdomVerses } from "../../data/wisdom";
-import { cognitiveBiases } from "../../data/biases";
+import { wisdomVerses } from "../../data/index";
+import { cognitiveBiases } from "../../data/index";
 
 export const createDecisionFramework = createTool({
   id: "create_decision_framework",

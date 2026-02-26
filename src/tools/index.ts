@@ -24,3 +24,6 @@ export {
   generateReflection,
   getPendingReflections,
 } from "./reflect";
+
+// Reputation Layer (Layer 4) — 1 tool
+export { getKarmaScore } from "./reputation/get-karma-score";

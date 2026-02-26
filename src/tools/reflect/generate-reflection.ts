@@ -1,7 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDecisionStore } from "../decide/log-decision";
-import { wisdomVerses } from "../../data/wisdom";
+import { wisdomVerses } from "../../data/index";
 
 export const generateReflection = createTool({
   id: "generate_reflection",
@@ -10,6 +10,7 @@ export const generateReflection = createTool({
   inputSchema: z.object({
     userId: z.string().default("default").describe("User identifier"),
     period: z.enum(["weekly", "monthly", "quarterly"]).default("weekly"),
+    includeWisdom: z.boolean().default(true).describe("Include a wisdom verse for the next period"),
   }),
   outputSchema: z.object({
     period: z.string(),
@@ -113,12 +114,14 @@ export const generateReflection = createTool({
       valueAlignment * 0.2
     );
 
+    // Thresholds from 09-reputation-ethics.md:
+    // 0-20: Beginning | 21-40: Awakening | 41-60: Growing | 61-80: Flourishing | 81-100: Mastery
     const levels = [
       { min: 0, label: "Beginning" },
-      { min: 25, label: "Awakening" },
-      { min: 45, label: "Growing" },
-      { min: 65, label: "Flourishing" },
-      { min: 85, label: "Mastery" },
+      { min: 21, label: "Awakening" },
+      { min: 41, label: "Growing" },
+      { min: 61, label: "Flourishing" },
+      { min: 81, label: "Mastery" },
     ];
     const level = levels.reduce((acc, l) => (karmaScore >= l.min ? l : acc), levels[0]);
 

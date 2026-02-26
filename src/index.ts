@@ -3,10 +3,11 @@
  *
  * Action → Consequence → Reflection → Growth
  *
- * 15 tools across 3 layers:
+ * 16 tools across 4 layers:
  * - Ground (7): Mindfulness, breathwork, meditation, wisdom, affirmations
  * - Decide (4): Decision frameworks, bias detection, wisdom counsel
  * - Reflect (4): Outcome tracking, pattern detection, reflections
+ * - Reputation (1): Karma Score
  *
  * Distribution: MCP Server (primary), REST API + x402, Mastra agents
  */
@@ -24,5 +25,4 @@ export * from "./agents";
 export { mcpServer } from "./mcp/server";
 
 // Data (for direct access)
-export { wisdomVerses, breathworkExercises, affirmations, meditationTemplates } from "./data/wisdom";
-export { cognitiveBiases } from "./data/biases";
+export { wisdomVerses, breathworkExercises, affirmations, meditationTemplates, cognitiveBiases } from "./data/index";

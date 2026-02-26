@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { breathworkExercises } from "../../data/wisdom";
+import { breathworkExercises } from "../../data/index";
 
 export const getBreathingExercise = createTool({
   id: "get_breathing_exercise",
@@ -17,6 +17,7 @@ export const getBreathingExercise = createTool({
       .describe("Current emotional state"),
     difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("beginner").describe("Skill level"),
     slug: z.string().optional().describe("Specific exercise by slug (e.g., 'box-breathing')"),
+    durationMinutes: z.number().min(1).max(15).optional().describe("Desired duration — adjusts number of cycles"),
   }),
   outputSchema: z.object({
     exercise: z.object({

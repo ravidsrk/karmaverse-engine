@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { wisdomVerses } from "../../data/wisdom";
+import { wisdomVerses } from "../../data/index";
 
 export const verseOfTheDay = createTool({
   id: "verse_of_the_day",

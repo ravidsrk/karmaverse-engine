@@ -4,7 +4,7 @@ import {
   breathworkExercises,
   affirmations,
   meditationTemplates,
-} from "./wisdom";
+} from "./index";
 
 describe("Wisdom Data", () => {
   describe("wisdomVerses", () => {

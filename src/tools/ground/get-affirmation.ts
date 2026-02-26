@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { affirmations } from "../../data/wisdom";
+import { affirmations } from "../../data/index";
 
 export const getAffirmation = createTool({
   id: "get_affirmation",
@@ -8,12 +8,13 @@ export const getAffirmation = createTool({
     "Get a personalized affirmation rooted in wisdom traditions. Choose by category (calm, resilience, purpose, confidence, gratitude, focus, self-worth) or by mood.",
   inputSchema: z.object({
     category: z
-      .enum(["calm", "resilience", "purpose", "confidence", "gratitude", "focus", "self-worth"])
+      .enum(["calm", "resilience", "purpose", "confidence", "gratitude", "focus", "self-worth", "letting_go"])
       .optional()
       .describe("Affirmation category"),
     mood: z.string().optional().describe("Current emotional state"),
     tradition: z.enum(["gita", "stoic", "buddhist", "yoga_sutras", "any"]).default("any").describe("Preferred tradition"),
-    context: z.string().optional().describe("Situation for personalization"),
+    userContext: z.string().optional().describe("User's situation for AI-personalized affirmation"),
+    persona: z.enum(["teacher", "friend", "monk"]).optional().describe("Interpretation style"),
   }),
   outputSchema: z.object({
     affirmation: z.object({
@@ -53,6 +54,7 @@ export const getAffirmation = createTool({
       gratitude: "Before reacting to anything today, recall this affirmation first.",
       focus: "Place this at the top of your workspace. Return to it when distraction calls.",
       "self-worth": "Say this to yourself the way you'd say it to someone you deeply care about.",
+      letting_go: "As you exhale, imagine releasing this. Let go a little more with each breath.",
     };
 
     return {

@@ -8,6 +8,7 @@ export const detectPatterns = createTool({
     "Analyze decision history to find recurring behavioral patterns. Requires at least 3 decisions with outcomes. Detects patterns in timing, emotional state, decision quality, and bias recurrence.",
   inputSchema: z.object({
     userId: z.string().default("default").describe("User identifier"),
+    focusArea: z.enum(["career", "relationships", "health", "financial", "personal_growth", "all"]).default("all").describe("Filter pattern detection by life area"),
   }),
   outputSchema: z.object({
     patternsFound: z.array(

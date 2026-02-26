@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { cognitiveBiases } from "../../data/biases";
+import { cognitiveBiases } from "../../data/index";
 
 export const detectBiases = createTool({
   id: "detect_biases",

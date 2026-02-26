@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { wisdomVerses } from "../../data/wisdom";
+import { wisdomVerses } from "../../data/index";
 
 export const searchWisdom = createTool({
   id: "search_wisdom",
@@ -17,6 +17,7 @@ export const searchWisdom = createTool({
       .default("all")
       .describe("Filter by wisdom tradition"),
     limit: z.number().min(1).max(10).default(3).describe("Number of results to return"),
+    persona: z.enum(["teacher", "friend", "monk"]).optional().describe("Interpretation style"),
   }),
   outputSchema: z.object({
     verses: z.array(
