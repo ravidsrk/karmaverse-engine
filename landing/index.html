@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KarmaVerse — The Karma Engine for AI Agents</title>
+  <meta name="description" content="Mindfulness Intelligence for AI Agents. 16 tools across 5 layers. One MCP install. Free to start.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --indigo: #6366f1;
+      --deep-dark: #0B0B14;
+      --muted-purple: #3F3D56;
+      --emerald: #22c55e;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #a855f7;
+      --blue: #3b82f6;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --surface: #151520;
+      --surface-hover: #1e1e2e;
+      --border: #2d2d3d;
+      --radius: 12px;
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      /* Layer colors */
+      --ground: #22c55e;
+      --decide: #f59e0b;
+      --reflect: #6366f1;
+      --reputation: #a855f7;
+      --ethics: #f43f5e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font);
+      background: var(--deep-dark);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    a { color: var(--indigo); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* === SECTION 1: HERO === */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 80px 24px;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 70%);
+    }
+    .hero-logo { font-size: 1.2rem; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
+    .hero h1 span { background: linear-gradient(135deg, var(--indigo), var(--emerald)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin-bottom: 40px; }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: var(--emerald); color: #000; }
+    .btn-primary:hover { background: #16a34a; text-decoration: none; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { border-color: var(--indigo); color: var(--indigo); text-decoration: none; }
+    .hero-badges { margin-top: 60px; display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; color: var(--text-muted); font-size: 0.9rem; }
+    .hero-badges span { display: flex; align-items: center; gap: 6px; }
+
+    /* === SECTION 2: KARMA ENGINE === */
+    .engine { padding: 120px 24px; }
+    .section-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--indigo); font-weight: 600; margin-bottom: 12px; }
+    .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 16px; }
+    .section-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin-bottom: 48px; }
+    .layers-stack { display: flex; flex-direction: column; gap: 2px; max-width: 700px; margin: 0 auto; }
+    .layer-card {
+      display: flex; align-items: center; gap: 20px;
+      padding: 20px 24px; border-radius: var(--radius);
+      background: var(--surface); border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .layer-card:hover { border-color: var(--indigo); transform: translateX(4px); }
+    .layer-icon { font-size: 1.8rem; width: 48px; text-align: center; }
+    .layer-info h3 { font-size: 1.1rem; font-weight: 600; }
+    .layer-info p { font-size: 0.9rem; color: var(--text-muted); }
+    .layer-phase { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); background: var(--surface-hover); padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+
+    /* === SECTION 3: QUICK START === */
+    .quickstart { padding: 120px 24px; background: var(--surface); }
+    .code-block {
+      background: #0d0d1a; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; font-family: var(--mono); font-size: 0.95rem; overflow-x: auto;
+      max-width: 700px; margin: 0 auto;
+    }
+    .code-block .comment { color: #6b7280; }
+    .code-block .string { color: var(--emerald); }
+    .code-block .key { color: var(--amber); }
+
+    /* === SECTION 4: LIVE DEMO === */
+    .demo { padding: 120px 24px; }
+    .demo-box {
+      max-width: 700px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .demo-header { background: #1a1a2e; padding: 12px 20px; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .demo-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .demo-body { padding: 24px; font-family: var(--mono); font-size: 0.9rem; line-height: 1.8; }
+    .demo-body .req { color: var(--emerald); }
+    .demo-body .res { color: var(--text-muted); }
+
+    /* === SECTION 5: 16 TOOLS === */
+    .tools-section { padding: 120px 24px; background: var(--surface); }
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
+    .tool-card {
+      background: var(--deep-dark); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: all 0.2s;
+    }
+    .tool-card:hover { border-color: var(--indigo); }
+    .tool-card h4 { font-family: var(--mono); font-size: 0.95rem; margin-bottom: 6px; color: var(--text); }
+    .tool-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .tool-badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
+    }
+    .badge-ground { background: rgba(34,197,94,0.15); color: var(--ground); }
+    .badge-decide { background: rgba(245,158,11,0.15); color: var(--decide); }
+    .badge-reflect { background: rgba(99,102,241,0.15); color: var(--reflect); }
+    .badge-reputation { background: rgba(168,85,247,0.15); color: var(--reputation); }
+
+    /* === SECTION 6: USE CASES === */
+    .usecases { padding: 120px 24px; }
+    .usecases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .usecase-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; text-align: center;
+    }
+    .usecase-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .usecase-card h4 { font-size: 1.1rem; margin-bottom: 8px; }
+    .usecase-card p { font-size: 0.9rem; color: var(--text-muted); }
+
+    /* === SECTION 7: PRICING === */
+    .pricing { padding: 120px 24px; background: var(--surface); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .price-card {
+      background: var(--deep-dark); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px; position: relative;
+    }
+    .price-card.featured { border-color: var(--indigo); }
+    .price-card.featured::before {
+      content: 'POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--indigo); color: #fff; font-size: 0.7rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 4px; letter-spacing: 0.1em;
+    }
+    .price-amount { font-size: 2.5rem; font-weight: 800; }
+    .price-period { font-size: 0.9rem; color: var(--text-muted); }
+    .price-features { list-style: none; margin: 24px 0; }
+    .price-features li { padding: 6px 0; font-size: 0.95rem; color: var(--text-muted); }
+    .price-features li::before { content: '✓ '; color: var(--emerald); }
+
+    /* === SECTION 8: $KARMA TOKEN === */
+    .token { padding: 120px 24px; }
+    .token-box {
+      max-width: 800px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    }
+    .token-benefits { list-style: none; }
+    .token-benefits li { padding: 8px 0; font-size: 0.95rem; }
+    .token-benefits li::before { content: '💎 '; }
+
+    /* === SECTION 9: ECOSYSTEM === */
+    .ecosystem { padding: 120px 24px; background: var(--surface); }
+    .eco-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; max-width: 900px; margin: 0 auto; }
+    .eco-card {
+      background: var(--deep-dark); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; text-align: center;
+    }
+    .eco-card .eco-icon { font-size: 2rem; margin-bottom: 8px; }
+    .eco-card h4 { font-size: 0.95rem; margin-bottom: 4px; }
+    .eco-card p { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* === SECTION 10: FOOTER === */
+    .footer { padding: 60px 24px; border-top: 1px solid var(--border); text-align: center; }
+    .footer-links { display: flex; gap: 32px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+    .footer-links a { color: var(--text-muted); font-size: 0.9rem; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .token-box { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero-badges { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SECTION 1: HERO -->
+<section class="hero">
+  <div class="hero-logo">☸ KarmaVerse</div>
+  <h1>The <span>Karma Engine</span><br>for AI Agents</h1>
+  <p>Help your agent help users decide better, reflect deeper, and stay grounded. One MCP install. 16 tools. Free to start.</p>
+  <div class="hero-ctas">
+    <a href="#quickstart" class="btn btn-primary">⚡ Install MCP Server</a>
+    <a href="https://github.com/ravidsrk/karmaverse-engine" target="_blank" class="btn btn-ghost">View Docs →</a>
+  </div>
+  <div class="hero-badges">
+    <span>🔌 MCP Ecosystem</span>
+    <span>🪙 $KARMA on Base</span>
+    <span>🤖 Virtuals Graduated</span>
+    <span>⛓️ Base Chain</span>
+  </div>
+</section>
+
+<!-- SECTION 2: THE KARMA ENGINE -->
+<section class="engine">
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <div class="section-title">The Karma Engine</div>
+    <div class="section-subtitle">Action → Consequence → Growth. Five layers that no one else has.</div>
+    <div class="layers-stack">
+      <div class="layer-card" style="border-left: 3px solid var(--ethics);">
+        <div class="layer-icon">🛡️</div>
+        <div class="layer-info">
+          <h3>Ethics</h3>
+          <p>"Is this the right thing to do?"</p>
+        </div>
+        <div class="layer-phase">Phase 5</div>
+      </div>
+      <div class="layer-card" style="border-left: 3px solid var(--reputation);">
+        <div class="layer-icon">⭐</div>
+        <div class="layer-info">
+          <h3>Reputation — Karma Score</h3>
+          <p>"Am I becoming who I want to be?" — Composite 0-100 score</p>
+        </div>
+        <div class="layer-phase">Active</div>
+      </div>
+      <div class="layer-card" style="border-left: 3px solid var(--reflect);">
+        <div class="layer-icon">🪞</div>
+        <div class="layer-info">
+          <h3>Reflect</h3>
+          <p>"What happened and what did I learn?" — Outcome tracking + patterns</p>
+        </div>
+        <div class="layer-phase">Active</div>
+      </div>
+      <div class="layer-card" style="border-left: 3px solid var(--decide);">
+        <div class="layer-icon">⚖️</div>
+        <div class="layer-info">
+          <h3>Decide</h3>
+          <p>"How should I choose?" — Frameworks + bias detection + wisdom counsel</p>
+        </div>
+        <div class="layer-phase">Active</div>
+      </div>
+      <div class="layer-card" style="border-left: 3px solid var(--ground);">
+        <div class="layer-icon">🧘</div>
+        <div class="layer-info">
+          <h3>Ground</h3>
+          <p>"Am I in the right state of mind?" — Breathwork, meditation, wisdom</p>
+        </div>
+        <div class="layer-phase">Active</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: QUICK START -->
+<section class="quickstart" id="quickstart">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Get Started</div>
+    <div class="section-title">3 Lines. 16 Tools.</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">Add to your MCP config and restart your agent. That's it.</div>
+    <div class="code-block" style="text-align: left;">
+      <span class="comment">// Add to your MCP config (Claude, Cursor, OpenClaw)</span><br><br>
+      {<br>
+      &nbsp;&nbsp;<span class="key">"mcpServers"</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"karmaverse"</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"command"</span>: <span class="string">"npx"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"args"</span>: [<span class="string">"@karmaverse/mcp-server"</span>]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+      &nbsp;&nbsp;}<br>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: LIVE DEMO -->
+<section class="demo">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Try It</div>
+    <div class="section-title">See It In Action</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">A single API call returns breathwork, wisdom, and an affirmation — all personalized to mood.</div>
+    <div class="demo-box">
+      <div class="demo-header">
+        <span class="demo-dot" style="background: var(--emerald);"></span>
+        api.karmaverse.ai — Live
+      </div>
+      <div class="demo-body" style="text-align: left;">
+        <div class="req">POST /api/v2/mindfulness/check-in</div>
+        <div class="res">{ "mood": "anxious", "energy": "high", "context": "job interview" }</div>
+        <br>
+        <div class="res" style="color: var(--text);">
+          → 🌬️ Box Breathing (4-4-4-4)<br>
+          → 📖 Gita 2.47: "You have a right to your work, not to the fruits..."<br>
+          → 💬 "I focus on what I can control and release what I cannot."<br>
+          → 💡 "After breathing, try a 3-minute focus meditation."
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5: 16 TOOLS -->
+<section class="tools-section">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Tool Catalog</div>
+    <div class="section-title">16 Tools. 4 Layers.</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">Every tool your agent needs for the complete karma cycle.</div>
+    <div class="tools-grid">
+      <!-- Ground Layer -->
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>search_wisdom</h4><p>Search across 4 traditions by mood, theme, or query</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>get_verse</h4><p>Fetch specific verse with AI-personalized interpretation</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>get_meditation</h4><p>Guided meditation with structured intro/body/closing</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>get_breathing_exercise</h4><p>6 breathwork techniques with step-by-step timing</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>get_affirmation</h4><p>Wisdom-rooted affirmations across 8 categories</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>mindfulness_check_in</h4><p>Complete grounding: breathwork + verse + affirmation</p></div>
+      <div class="tool-card"><span class="tool-badge badge-ground">Ground</span><h4>verse_of_the_day</h4><p>Daily rotating verse from any tradition</p></div>
+      <!-- Decide Layer -->
+      <div class="tool-card"><span class="tool-badge badge-decide">Decide</span><h4>create_decision_framework</h4><p>Structured framework with values check + bias scan</p></div>
+      <div class="tool-card"><span class="tool-badge badge-decide">Decide</span><h4>detect_biases</h4><p>Scan reasoning for 12 cognitive biases</p></div>
+      <div class="tool-card"><span class="tool-badge badge-decide">Decide</span><h4>log_decision</h4><p>Record decisions with options, reasoning, review date</p></div>
+      <div class="tool-card"><span class="tool-badge badge-decide">Decide</span><h4>get_wisdom_counsel</h4><p>Cross-tradition wisdom on any dilemma</p></div>
+      <!-- Reflect Layer -->
+      <div class="tool-card"><span class="tool-badge badge-reflect">Reflect</span><h4>log_outcome</h4><p>Record what happened vs. what you predicted</p></div>
+      <div class="tool-card"><span class="tool-badge badge-reflect">Reflect</span><h4>detect_patterns</h4><p>Find recurring themes in your decision history</p></div>
+      <div class="tool-card"><span class="tool-badge badge-reflect">Reflect</span><h4>generate_reflection</h4><p>Weekly/monthly/quarterly reflection reports</p></div>
+      <div class="tool-card"><span class="tool-badge badge-reflect">Reflect</span><h4>get_pending_reflections</h4><p>Decisions awaiting outcome review</p></div>
+      <!-- Reputation Layer -->
+      <div class="tool-card"><span class="tool-badge badge-reputation">Reputation</span><h4>get_karma_score</h4><p>Composite 0-100 score with 5-component breakdown</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: USE CASES -->
+<section class="usecases">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Who Uses This</div>
+    <div class="section-title">Built for Every Agent</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">Any agent that helps users navigate life decisions, stress, or growth.</div>
+    <div class="usecases-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🤖</div>
+        <h4>Personal Assistant</h4>
+        <p>Claude, OpenClaw, or custom agents that manage daily life. Needs wellness + decision support.</p>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🧠</div>
+        <h4>Wellness Agent</h4>
+        <p>Therapy, coaching, or mental health agents. Needs breathwork, wisdom, and reflection frameworks.</p>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📊</div>
+        <h4>Productivity Agent</h4>
+        <p>Focus, scheduling, and task agents. Needs breaks, decision frameworks, and weekly reviews.</p>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🛠️</div>
+        <h4>Agent Builder</h4>
+        <p>Developers building custom agents. Don't want to build mindfulness logic from scratch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: PRICING -->
+<section class="pricing">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Pricing</div>
+    <div class="section-title">Start Free. Scale as You Grow.</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">Pay with USDC, or get 40% off with $KARMA token.</div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3 style="color: var(--emerald); margin-bottom: 8px;">Free</h3>
+        <div class="price-amount">$0</div>
+        <div class="price-period">forever</div>
+        <ul class="price-features">
+          <li>10 calls per day</li>
+          <li>All 16 tools</li>
+          <li>All 4 layers</li>
+          <li>No API key needed</li>
+          <li>IP-based rate limit</li>
+        </ul>
+        <a href="#quickstart" class="btn btn-ghost" style="width: 100%; justify-content: center;">Get Started</a>
+      </div>
+      <div class="price-card featured">
+        <h3 style="color: var(--indigo); margin-bottom: 8px;">Standard</h3>
+        <div class="price-amount">$5<span style="font-size: 1rem; font-weight: 400;">/mo</span></div>
+        <div class="price-period">or ~$3/mo with $KARMA</div>
+        <ul class="price-features">
+          <li>1,000 calls per day</li>
+          <li>All 16 tools</li>
+          <li>AI personalization</li>
+          <li>API key auth</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-primary" style="width: 100%; justify-content: center;">Coming Soon</a>
+      </div>
+      <div class="price-card">
+        <h3 style="color: var(--purple); margin-bottom: 8px;">Premium</h3>
+        <div class="price-amount">$25<span style="font-size: 1rem; font-weight: 400;">/mo</span></div>
+        <div class="price-period">or ~$15/mo with $KARMA</div>
+        <ul class="price-features">
+          <li>10,000 calls per day</li>
+          <li>All 16 tools</li>
+          <li>AI personalization</li>
+          <li>Custom personas</li>
+          <li>Dedicated support</li>
+        </ul>
+        <a href="#" class="btn btn-ghost" style="width: 100%; justify-content: center;">Coming Soon</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8: $KARMA TOKEN -->
+<section class="token">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Token</div>
+    <div class="section-title">$KARMA on Base</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">The utility token of the Karma Engine. Pay for API access. Get discounts. Govern the protocol.</div>
+    <div class="token-box">
+      <div>
+        <h3 style="margin-bottom: 16px;">Why $KARMA?</h3>
+        <ul class="token-benefits">
+          <li>40% discount on API pricing</li>
+          <li>Governance voting rights</li>
+          <li>Agent-to-agent payment currency</li>
+          <li>Staking rewards (Phase 3)</li>
+          <li>Graduated on Virtuals Protocol</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="margin-bottom: 16px;">Token Details</h3>
+        <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 2;">
+          <strong>Chain:</strong> Base<br>
+          <strong>Standard:</strong> ERC-20<br>
+          <strong>Protocol:</strong> Virtuals<br>
+          <strong>Status:</strong> Graduated ✅<br>
+          <strong>Use:</strong> API payments + discount
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 9: ECOSYSTEM -->
+<section class="ecosystem">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Distribution</div>
+    <div class="section-title">5 Ways to Connect</div>
+    <div class="section-subtitle" style="margin: 0 auto 48px;">Meet agents where they are.</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🔌</div>
+        <h4>MCP Server</h4>
+        <p>Primary channel. One install for Claude, Cursor, OpenClaw.</p>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🌐</div>
+        <h4>REST API</h4>
+        <p>Standard HTTP endpoints for any backend integration.</p>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">💰</div>
+        <h4>x402 Payments</h4>
+        <p>Pay-per-call with USDC on Base. No subscription needed.</p>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🤖</div>
+        <h4>ACP Protocol</h4>
+        <p>Agent-to-agent commerce on Virtuals. Phase 3.</p>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">📱</div>
+        <h4>Telegram Bot</h4>
+        <p>Direct consumer access. Phase 2.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/ravidsrk/karmaverse-engine" target="_blank">GitHub</a>
+      <a href="#">Documentation</a>
+      <a href="#">API Reference</a>
+      <a href="#">$KARMA Token</a>
+      <a href="https://twitter.com/Gowda_Karma" target="_blank">Twitter</a>
+    </div>
+    <div class="footer-copy">
+      ☸ KarmaVerse — Mindfulness Intelligence for AI Agents<br>
+      <span style="font-size: 0.8rem;">Action → Consequence → Reflection → Growth</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
