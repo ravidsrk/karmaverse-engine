@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getDecisionStore } from "../decide/log-decision";
+import { getDecisionsByUser } from "../../db";
 
 export const detectPatterns = createTool({
   id: "detect_patterns",
@@ -27,10 +27,9 @@ export const detectPatterns = createTool({
   }),
   execute: async (params) => {
     const { userId, focusArea } = params;
-    const store = getDecisionStore();
 
     // Gather user's decisions, optionally filtered by focus area
-    let allDecisions = Array.from(store.values()).filter((d) => d.userId === userId);
+    let allDecisions = await getDecisionsByUser(userId);
 
     // If focusArea is specified and not "all", filter by title/context keyword matching
     if (focusArea && focusArea !== "all") {

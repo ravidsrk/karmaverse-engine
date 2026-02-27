@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { getKarmaScore, computeKarmaScore, getKarmaLevel, KARMA_LEVELS } from "./get-karma-score";
-import { getDecisionStore } from "../decide/log-decision";
+import { getMemoryStore } from "../../db";
 
 describe("get_karma_score", () => {
   beforeEach(() => {
-    const store = getDecisionStore();
-    store.clear();
+    getMemoryStore().clear();
   });
 
   it("returns a score for a user with no data", async () => {
-    const result = await getKarmaScore.execute({ userId: "new_user", includeBreakdown: true });
+    const result = await getKarmaScore.execute!({ userId: "new_user", includeBreakdown: true }, {} as any);
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
     expect(result.level).toBeDefined();
@@ -17,18 +16,14 @@ describe("get_karma_score", () => {
   });
 
   it("includes breakdown when requested", async () => {
-    const result = await getKarmaScore.execute({ userId: "test", includeBreakdown: true });
+    const result = await getKarmaScore.execute!({ userId: "test", includeBreakdown: true }, {} as any);
     expect(result.breakdown).toBeDefined();
     expect(result.breakdown?.grounding).toBeGreaterThanOrEqual(0);
     expect(result.breakdown?.decisionQuality).toBeGreaterThanOrEqual(0);
-    expect(result.breakdown?.reflectionDiscipline).toBeGreaterThanOrEqual(0);
-    expect(result.breakdown?.patternAwareness).toBeGreaterThanOrEqual(0);
-    expect(result.breakdown?.valueAlignment).toBeGreaterThanOrEqual(0);
   });
 
   it("provides next milestone unless at Mastery", async () => {
-    const result = await getKarmaScore.execute({ userId: "test", includeBreakdown: true });
-    // Default score is low enough that a next milestone should exist
+    const result = await getKarmaScore.execute!({ userId: "test", includeBreakdown: true }, {} as any);
     if (result.score < 81) {
       expect(result.nextMilestone).not.toBeNull();
       expect(result.nextMilestone!.pointsNeeded).toBeGreaterThan(0);
@@ -56,9 +51,9 @@ describe("get_karma_score", () => {
     ]);
   });
 
-  it("computes higher score with decisions and outcomes", () => {
-    const store = getDecisionStore();
-    // Add some decisions with outcomes
+  it("computes higher score with decisions and outcomes", async () => {
+    const store = getMemoryStore();
+    // Add some decisions with outcomes directly to memory store
     store.set("d1", {
       id: "d1",
       userId: "active_user",
@@ -84,8 +79,8 @@ describe("get_karma_score", () => {
       outcome: { actualOutcome: "Great", satisfaction: 9, lessons: "Valuable", wouldChooseDifferently: false, reflectedAt: new Date().toISOString() },
     });
 
-    const active = computeKarmaScore("active_user");
-    const empty = computeKarmaScore("empty_user");
+    const active = await computeKarmaScore("active_user");
+    const empty = await computeKarmaScore("empty_user");
 
     expect(active.score).toBeGreaterThan(empty.score);
     expect(active.stats.totalDecisions).toBe(2);

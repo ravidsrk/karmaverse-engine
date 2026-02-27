@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import * as tools from "../tools/index.js";
 import { wisdomVerses, breathworkExercises, meditationTemplates, affirmations, cognitiveBiases } from "../data/index";
-import { getDecisionStore } from "../tools/decide/log-decision.js";
+import { getDecisionsByUser, getDecisionById } from "../db";
 import { rateLimitMiddleware, errorMiddleware } from "./middleware";
 
 /**
@@ -368,25 +368,22 @@ app.post("/api/v2/decide/counsel", async (c) => {
 // List decisions for a user
 app.get("/api/v2/decide/decisions/:user_id", async (c) => {
   const userId = c.req.param("user_id");
-  const store = getDecisionStore();
-  const decisions = Array.from(store.values())
-    .filter((d) => d.userId === userId)
-    .map((d) => ({
-      id: d.id,
-      title: d.title,
-      chosenOption: d.chosenOption,
-      loggedAt: d.loggedAt,
-      hasOutcome: d.outcome !== null,
-      reviewDate: d.reviewDate,
-    }));
+  const allDecisions = await getDecisionsByUser(userId);
+  const decisions = allDecisions.map((d) => ({
+    id: d.id,
+    title: d.title,
+    chosenOption: d.chosenOption,
+    loggedAt: d.loggedAt,
+    hasOutcome: d.outcome !== null,
+    reviewDate: d.reviewDate,
+  }));
   return c.json({ userId, decisions, total: decisions.length });
 });
 
 // Get single decision
 app.get("/api/v2/decide/decision/:id", async (c) => {
   const id = c.req.param("id");
-  const store = getDecisionStore();
-  const decision = store.get(id);
+  const decision = await getDecisionById(id);
   if (!decision) return c.json({ error: "DECISION_NOT_FOUND", message: `No decision with id '${id}'` }, 404);
   return c.json({ decision });
 });
@@ -434,9 +431,9 @@ app.get("/api/v2/reflect/pending", async (c) => {
 // Reflection history for a user
 app.get("/api/v2/reflect/history/:user_id", async (c) => {
   const userId = c.req.param("user_id");
-  const store = getDecisionStore();
-  const reflected = Array.from(store.values())
-    .filter((d) => d.userId === userId && d.outcome !== null)
+  const allDecisions = await getDecisionsByUser(userId);
+  const reflected = allDecisions
+    .filter((d) => d.outcome !== null)
     .map((d) => ({
       decisionId: d.id,
       title: d.title,

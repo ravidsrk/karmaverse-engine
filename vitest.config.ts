@@ -5,6 +5,10 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/*.test.ts"],
+    env: {
+      // Force in-memory fallback in tests — no Prisma/Neon
+      DATABASE_URL: "",
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "json-summary", "html"],

@@ -1,16 +1,18 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import { createDecision, getMemoryStore } from "../../db";
 
-// In-memory store for now — will be replaced by Supabase/LibSQL
-const decisionStore: Map<string, any> = new Map();
-
-export const getDecisionStore = () => decisionStore;
+/**
+ * @deprecated Use getMemoryStore() from db module instead.
+ * Kept for backward compatibility with tests that import this directly.
+ */
+export const getDecisionStore = () => getMemoryStore();
 
 export const logDecision = createTool({
   id: "log_decision",
   description:
-    "Log a decision for future reflection. Stores the decision context, options, chosen option, reasoning, and predicted outcome. Returns a decision ID for tracking.",
+    "Log a decision for future reflection. Stores to Neon Postgres (or in-memory fallback). Returns a decision ID for tracking.",
   inputSchema: z.object({
     userId: z.string().default("default").describe("User identifier"),
     title: z.string().describe("Brief title of the decision"),
@@ -48,8 +50,8 @@ export const logDecision = createTool({
     const loggedAt = new Date().toISOString();
     const reviewDate = new Date(Date.now() + reviewAfterDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const decision = {
-      decisionId,
+    await createDecision({
+      id: decisionId,
       userId,
       title,
       context: decisionContext,
@@ -59,13 +61,9 @@ export const logDecision = createTool({
       predictedOutcome,
       confidenceLevel,
       biasesFlagged,
-      reviewAfterDays,
-      loggedAt,
       reviewDate,
-      outcome: null, // Filled later by log_outcome
-    };
-
-    decisionStore.set(decisionId, decision);
+      loggedAt,
+    });
 
     return {
       decisionId,

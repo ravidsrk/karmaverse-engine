@@ -1,0 +1,98 @@
+// KarmaVerse Karma Engine — Prisma Schema
+// Database: Neon PostgreSQL (schema: karmaverse)
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["karmaverse"]
+}
+
+/// Decisions logged via log_decision tool (Layer 2: Decide)
+model Decision {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  title            String
+  context          String?
+  options          String[]
+  chosenOption     String    @map("chosen_option")
+  reasoning        String?
+  predictedOutcome String?   @map("predicted_outcome")
+  confidenceLevel  Int?      @map("confidence_level")
+  biasesFlagged    String[]  @map("biases_flagged")
+  reviewDate       DateTime? @map("review_date")
+  loggedAt         DateTime  @default(now()) @map("logged_at")
+
+  outcome          DecisionOutcome?
+
+  @@index([userId])
+  @@index([loggedAt])
+  @@map("decisions")
+  @@schema("karmaverse")
+}
+
+/// Outcomes logged via log_outcome tool (Layer 3: Reflect)
+model DecisionOutcome {
+  id                     String   @id @default(cuid())
+  decisionId             String   @unique @map("decision_id")
+  actualOutcome          String   @map("actual_outcome")
+  satisfaction           Int
+  lessons                String?
+  wouldChooseDifferently Boolean  @default(false) @map("would_choose_differently")
+  surpriseFactor         String?  @map("surprise_factor")
+  reflectedAt            DateTime @default(now()) @map("reflected_at")
+
+  decision               Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  @@map("decision_outcomes")
+  @@schema("karmaverse")
+}
+
+/// Karma Score snapshots (Layer 4: Reputation)
+model KarmaScore {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  score        Int
+  level        String
+  breakdown    Json
+  calculatedAt DateTime @default(now()) @map("calculated_at")
+
+  @@index([userId])
+  @@index([calculatedAt])
+  @@map("karma_scores")
+  @@schema("karmaverse")
+}
+
+/// API usage tracking
+model ApiUsage {
+  id             String   @id @default(cuid())
+  apiKey         String?  @map("api_key")
+  toolName       String   @map("tool_name")
+  channel        String   @default("mcp")
+  requestParams  Json?    @map("request_params")
+  responseTimeMs Int?     @map("response_time_ms")
+  calledAt       DateTime @default(now()) @map("called_at")
+
+  @@index([apiKey])
+  @@index([toolName])
+  @@index([calledAt])
+  @@map("api_usage")
+  @@schema("karmaverse")
+}
+
+/// User profiles with preferences and streak data
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  values      String[]
+  preferences Json?
+  streakData  Json?    @map("streak_data")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("user_profiles")
+  @@schema("karmaverse")
+}

@@ -1,11 +1,11 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getDecisionStore } from "../decide/log-decision";
+import { getDecisionById, saveOutcome } from "../../db";
 
 export const logOutcome = createTool({
   id: "log_outcome",
   description:
-    "Record the actual outcome of a past decision. Closes the reflection loop by comparing what actually happened with what was predicted. Essential for pattern detection and growth tracking.",
+    "Record the actual outcome of a past decision. Closes the reflection loop. Persists to Neon Postgres.",
   inputSchema: z.object({
     decisionId: z.string().describe("The decision ID from log_decision"),
     actualOutcome: z.string().describe("What actually happened"),
@@ -23,8 +23,7 @@ export const logOutcome = createTool({
   }),
   execute: async (params) => {
     const { decisionId, actualOutcome, satisfaction, lessons, wouldChooseDifferently, surpriseFactor } = params;
-    const store = getDecisionStore();
-    const decision = store.get(decisionId);
+    const decision = await getDecisionById(decisionId);
 
     if (!decision) {
       return {
@@ -36,16 +35,15 @@ export const logOutcome = createTool({
       };
     }
 
-    // Update the decision with outcome
-    decision.outcome = {
+    // Save outcome
+    await saveOutcome(decisionId, {
       actualOutcome,
       satisfaction,
       lessons,
       wouldChooseDifferently,
       surpriseFactor,
       reflectedAt: new Date().toISOString(),
-    };
-    store.set(decisionId, decision);
+    });
 
     // Prediction accuracy
     let predictionAccuracy = "No prediction was recorded.";
@@ -71,7 +69,6 @@ export const logOutcome = createTool({
       reflection = `Tough outcome on "${decision.title}". ${lessons ? `Hard lesson: ${lessons}. ` : ""}${wouldChooseDifferently ? "You'd choose differently — that clarity is valuable." : "Even in hindsight, you stand by the choice — that says something about your values."}`;
     }
 
-    // Karma score impact
     const karmaImpact = satisfaction >= 7 ? "+3 for positive outcome reflection" :
       satisfaction >= 4 ? "+2 for honest reflection on mixed results" :
       "+2 for courage to reflect on difficult outcomes";

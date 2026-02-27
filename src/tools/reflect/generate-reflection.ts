@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getDecisionStore } from "../decide/log-decision";
+import { getDecisionsInPeriod } from "../../db";
 import { wisdomVerses } from "../../data/index";
 
 export const generateReflection = createTool({
@@ -36,17 +36,14 @@ export const generateReflection = createTool({
   }),
   execute: async (params) => {
     const { userId, period, includeWisdom } = params;
-    const store = getDecisionStore();
 
     // Calculate period range
     const now = new Date();
     const periodDays = period === "weekly" ? 7 : period === "monthly" ? 30 : 90;
     const periodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
-    // Gather decisions in period
-    const allDecisions = Array.from(store.values()).filter(
-      (d) => d.userId === userId && new Date(d.loggedAt) >= periodStart
-    );
+    // Gather decisions in period (from Prisma or in-memory fallback)
+    const allDecisions = await getDecisionsInPeriod(userId, periodStart);
     const withOutcomes = allDecisions.filter((d) => d.outcome !== null);
 
     // Calculate stats

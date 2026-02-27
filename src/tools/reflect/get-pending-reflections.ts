@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getDecisionStore } from "../decide/log-decision";
+import { getDecisionsByUser } from "../../db";
 
 export const getPendingReflections = createTool({
   id: "get_pending_reflections",
@@ -27,27 +27,25 @@ export const getPendingReflections = createTool({
   }),
   execute: async (params) => {
     const { userId } = params;
-    const store = getDecisionStore();
     const now = new Date();
-
-    const allDecisions = Array.from(store.values()).filter((d) => d.userId === userId);
+    const allDecisions = await getDecisionsByUser(userId);
 
     const pending = allDecisions
       .filter((d) => {
-        if (d.outcome) return false; // Already reflected
-        const reviewDate = new Date(d.reviewDate);
-        return reviewDate <= now;
+        if (d.outcome) return false;
+        if (!d.reviewDate) return false;
+        return new Date(d.reviewDate) <= now;
       })
       .map((d) => {
-        const reviewDate = new Date(d.reviewDate);
+        const reviewDate = new Date(d.reviewDate!);
         const daysOverdue = Math.floor((now.getTime() - reviewDate.getTime()) / (1000 * 60 * 60 * 24));
 
         return {
-          decisionId: d.decisionId,
+          decisionId: d.id,
           title: d.title,
           chosenOption: d.chosenOption,
           decidedAt: d.loggedAt,
-          reviewDate: d.reviewDate,
+          reviewDate: d.reviewDate!,
           daysOverdue,
           predictedOutcome: d.predictedOutcome || null,
           prompt: `You decided to "${d.chosenOption}" regarding "${d.title}" on ${new Date(d.loggedAt).toLocaleDateString()}. How did it turn out?`,
@@ -55,7 +53,7 @@ export const getPendingReflections = createTool({
       })
       .sort((a, b) => b.daysOverdue - a.daysOverdue);
 
-    const upcomingCount = allDecisions.filter((d) => !d.outcome && new Date(d.reviewDate) > now).length;
+    const upcomingCount = allDecisions.filter((d) => !d.outcome && d.reviewDate && new Date(d.reviewDate) > now).length;
 
     return {
       pending,

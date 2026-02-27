@@ -1,17 +1,11 @@
+export { getPrisma, isDbAvailable, disconnectDb } from "./client";
 export {
-  getDb,
-  closeDb,
-  insertDecision,
-  getDecision,
+  createDecision,
+  getDecisionById,
   getDecisionsByUser,
-  getPendingReviewDecisions,
-  getUpcomingReviewCount,
-  insertOutcome,
-  getOutcome,
-  getDecisionsWithOutcomes,
-  getReflectedDecisions,
-  insertKarmaScore,
-  getLatestKarmaScore,
-  logApiUsage,
-} from "./schema";
-export type { DecisionRow, OutcomeRow } from "./schema";
+  saveOutcome,
+  getDecisionsInPeriod,
+  getPendingDecisions,
+  getMemoryStore,
+  type StoredDecision,
+} from "./decisions";

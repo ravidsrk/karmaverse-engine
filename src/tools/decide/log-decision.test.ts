@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { logDecision, getDecisionStore } from "./log-decision";
+import { logDecision } from "./log-decision";
+import { getDecisionById, getDecisionsByUser, getMemoryStore } from "../../db";
+import { disconnectDb } from "../../db";
 
 const exec = (params: any) => logDecision.execute!(params, {} as any);
 
 describe("log_decision", () => {
   beforeEach(() => {
-    getDecisionStore().clear();
+    // Clear in-memory store for tests (Prisma data is ephemeral per test if no DB)
+    getMemoryStore().clear();
   });
 
   it("logs a decision and returns ID", async () => {
@@ -22,23 +25,22 @@ describe("log_decision", () => {
     expect(result.message).toContain("30 days");
   });
 
-  it("stores decision in store", async () => {
+  it("stores decision and retrieves it", async () => {
     const result = await exec({
       userId: "test-user",
       title: "Stored decision",
       chosenOption: "Option B",
       reviewAfterDays: 7,
     });
-    const store = getDecisionStore();
-    expect(store.has(result.decisionId)).toBe(true);
-    const stored = store.get(result.decisionId);
-    expect(stored.title).toBe("Stored decision");
-    expect(stored.chosenOption).toBe("Option B");
+    const stored = await getDecisionById(result.decisionId);
+    expect(stored).not.toBeNull();
+    expect(stored!.title).toBe("Stored decision");
+    expect(stored!.chosenOption).toBe("Option B");
   });
 
   it("stores optional fields", async () => {
-    await exec({
-      userId: "test-user",
+    const result = await exec({
+      userId: "test-user-opt",
       title: "Detailed decision",
       chosenOption: "Option C",
       reasoning: "Because of X, Y, Z",
@@ -47,13 +49,12 @@ describe("log_decision", () => {
       biasesFlagged: ["Sunk Cost"],
       reviewAfterDays: 14,
     });
-    const store = getDecisionStore();
-    const entries = Array.from(store.values());
-    const d = entries[0];
-    expect(d.reasoning).toBe("Because of X, Y, Z");
-    expect(d.predictedOutcome).toBe("Good things will happen");
-    expect(d.confidenceLevel).toBe(8);
-    expect(d.biasesFlagged).toContain("Sunk Cost");
+    const d = await getDecisionById(result.decisionId);
+    expect(d).not.toBeNull();
+    expect(d!.reasoning).toBe("Because of X, Y, Z");
+    expect(d!.predictedOutcome).toBe("Good things will happen");
+    expect(d!.confidenceLevel).toBe(8);
+    expect(d!.biasesFlagged).toContain("Sunk Cost");
   });
 
   it("calculates review date correctly", async () => {

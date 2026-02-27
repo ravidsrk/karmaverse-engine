@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getDecisionStore } from "../decide/log-decision";
+import { getDecisionsByUser } from "../../db";
 
 /**
  * Karma Score — standalone Layer 4 (Reputation) tool.
@@ -24,7 +24,7 @@ export function getKarmaLevel(score: number): typeof KARMA_LEVELS[number] {
   return KARMA_LEVELS.reduce((acc, l) => (score >= l.min ? l : acc), KARMA_LEVELS[0]);
 }
 
-export function computeKarmaScore(userId: string): {
+export async function computeKarmaScore(userId: string): Promise<{
   score: number;
   level: string;
   levelDescription: string;
@@ -43,9 +43,8 @@ export function computeKarmaScore(userId: string): {
     avgSatisfaction: number | null;
     biasesIdentified: string[];
   };
-} {
-  const store = getDecisionStore();
-  const allDecisions = Array.from(store.values()).filter((d) => d.userId === userId);
+}> {
+  const allDecisions = await getDecisionsByUser(userId);
   const withOutcomes = allDecisions.filter((d) => d.outcome !== null);
 
   const avgSatisfaction =
@@ -158,7 +157,7 @@ export const getKarmaScore = createTool({
   }),
   execute: async (params) => {
     const { userId, includeBreakdown } = params;
-    const result = computeKarmaScore(userId);
+    const result = await computeKarmaScore(userId);
 
     if (!includeBreakdown) {
       const { breakdown, ...rest } = result;
